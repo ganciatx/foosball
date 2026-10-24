@@ -170,6 +170,7 @@ main {
 }
 
 .actions button,
+.actions select,
 .request button {
   border: 1px solid var(--line);
   background: var(--panel-2);
@@ -178,7 +179,8 @@ main {
   cursor: pointer;
 }
 
-.actions button:disabled {
+.actions button:disabled,
+.actions select:disabled {
   opacity: 0.45;
   cursor: not-allowed;
 }

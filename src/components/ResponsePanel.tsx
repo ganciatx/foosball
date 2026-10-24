@@ -1,7 +1,10 @@
 import { useState } from "react";
 import { JsonTree } from "./JsonTree";
+import { downloadText, formattedCsv, rawCsv } from "../lib/export";
 import { countRecords } from "../lib/request";
 import type { RequestResult } from "../types";
+
+type ExportFormat = "json" | "raw-csv" | "formatted-csv";
 
 type ResponsePanelProps = {
   result: RequestResult | null;
@@ -21,6 +24,20 @@ export function ResponsePanel({ result, error, loading }: ResponsePanelProps) {
     await navigator.clipboard.writeText(
       typeof result.body === "string" ? result.body : JSON.stringify(result.body, null, 2),
     );
+  }
+
+  function exportAs(format: ExportFormat) {
+    if (!result) {
+      return;
+    }
+    const name = `cfbd${result.url.split("?")[0]?.replace(/^https?:\/\/[^/]+/, "").replace(/^\/cfbd/, "").replace(/\//g, "-") ?? ""}`;
+    if (format === "json") {
+      downloadText(`${name}.json`, formatRaw(result.body, result.rawText), "application/json");
+    } else if (format === "raw-csv") {
+      downloadText(`${name}-raw.csv`, rawCsv(result.body), "text/csv");
+    } else {
+      downloadText(`${name}-formatted.csv`, formattedCsv(result.body), "text/csv");
+    }
   }
 
   return (
@@ -48,6 +65,19 @@ export function ResponsePanel({ result, error, loading }: ResponsePanelProps) {
           <button type="button" onClick={() => void copy()} disabled={!result}>
             Copy
           </button>
+          <select
+            aria-label="Export response"
+            value=""
+            disabled={!result}
+            onChange={(event) => exportAs(event.target.value as ExportFormat)}
+          >
+            <option value="" disabled>
+              Export…
+            </option>
+            <option value="json">JSON</option>
+            <option value="raw-csv">Raw CSV (nested as JSON)</option>
+            <option value="formatted-csv">Formatted CSV (flattened)</option>
+          </select>
         </div>
       </header>
       {error ? <p className="error">{error}</p> : null}
